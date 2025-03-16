@@ -94,7 +94,10 @@ class ItemController extends Controller
                 'message' => 'Item not found.'
             ], 404);
         }
-        $item->delete();
+        $hasil = $item->delete();
+        if ($hasil) {
+            FacadesStorage::disk('public')->delete($item->image_url);
+        }
         return response()->json([
             'message' => 'Item deleted successfully.'
         ], 200);
