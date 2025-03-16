@@ -9,8 +9,10 @@ use App\Models\Item;
 use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Http\Resources\ItemResource;
+use Illuminate\Container\Attributes\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage as FacadesStorage;
 
 class ItemController extends Controller
 {
@@ -71,6 +73,9 @@ class ItemController extends Controller
             $imageName = time() . '_' . $user->id . '_' . $item->id . '.' . $request->file('image')->extension();
             $imagePath = $request->file('image')->storeAs("images/items/$user->id", $imageName, 'public');
             $data['image_url'] = $imagePath;
+            if ($item->image_url) {
+                FacadesStorage::disk('public')->delete($item->image_url);
+            }
         }
         $data['price'] = (int)$data['price'];
         $data['stock'] = (int)$data['stock'];

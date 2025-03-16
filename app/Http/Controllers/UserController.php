@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -76,6 +77,9 @@ class UserController extends Controller
     $upd = User::where('email', $user->email)->first();
     if (!$upd) {
         return response()->json(['message' => 'User not found'], 404);
+    }
+    if ($upd->image_url && Storage::disk('public')->exists($upd->image_url)) {
+        Storage::disk('public')->delete($upd->image_url);
     }
     $upd->fullname = $data['fullname'];
     $upd->username = $data['username'];
