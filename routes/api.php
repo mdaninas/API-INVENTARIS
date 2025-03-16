@@ -21,5 +21,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     Route::get('item/', [ItemController::class,'showRelated']);
     Route::post('item/create', [ItemController::class,'createItem']);
+    Route::post('item/{item}', [ItemController::class,'showDetail']);
+    Route::post('item/{item}/updated', [ItemController::class,'updateItem']);
+    Route::post('item/{item}/delete', [ItemController::class,'deleteItem']);
 
 });

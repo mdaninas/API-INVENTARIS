@@ -15,7 +15,8 @@ class Item extends Model
         'stock',
         'price',
         'image_url',
-        'id_user'
+        'id_user',
+        'total_price'
     ];
     protected $attributes = [
         'image_url' => 'default.png',

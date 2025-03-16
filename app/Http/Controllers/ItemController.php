@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ItemCreateRequest;
+use App\Http\Requests\ItemUpdateRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Item;
 use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Http\Resources\ItemResource;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ItemController extends Controller
@@ -37,9 +39,12 @@ class ItemController extends Controller
     {
         $user = Auth::user();
         $data = $request->validated();
+        $data['price'] = (int)$data['price'];
+        $data['stock'] = (int)$data['stock'];
         $data['total_price'] = $data['price'] * $data['stock'];
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store("images/items/$user->id", 'public');
+            $imageName = time() . '_' . $user->id . '_' .  str_replace(' ','_',$request->item_name)  . '.' . $request->file('image')->extension();
+            $imagePath = $request->file('image')->storeAs("images/items/$user->id", $imageName, 'public');
             $data['image_url'] = $imagePath;
         }
         $data['id_user'] = $user->id;
@@ -50,44 +55,43 @@ class ItemController extends Controller
             'data' => new ItemResource($item)
         ], 201);
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreItemRequest $request)
+    public function showDetail(Request $request, Item $item)
     {
-        //
+        $user = Auth::user();
+        return response()->json([
+            'message' => "Berikut Isi Item dengan ID " . $item->id,
+            'data' => new ItemResource($item)
+        ]);
     }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Item $item)
+    public function updateItem(ItemUpdateRequest $request, Item $item)
     {
-        //
+        $user = Auth::user();
+        $data = $request->validated();
+        if ($request->hasFile('image')) {
+            $imageName = time() . '_' . $user->id . '_' . $item->id . '.' . $request->file('image')->extension();
+            $imagePath = $request->file('image')->storeAs("images/items/$user->id", $imageName, 'public');
+            $data['image_url'] = $imagePath;
+        }
+        $data['price'] = (int)$data['price'];
+        $data['stock'] = (int)$data['stock'];
+        $data['total_price'] = $data['price'] * $data['stock'];
+        $v = $item->update($data);
+        return response()->json([
+            'message' => 'Telah berhasil update',
+            'data' => new ItemResource($item)
+        ]);
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Item $item)
+    public function deleteItem(Request $request, Item $item)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateItemRequest $request, Item $item)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Item $item)
-    {
-        //
+        $user = Auth::user();
+        if (!$item) {
+            return response()->json([
+                'message' => 'Item not found.'
+            ], 404);
+        }
+        $item->delete();
+        return response()->json([
+            'message' => 'Item deleted successfully.'
+        ], 200);
     }
 }

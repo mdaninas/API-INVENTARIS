@@ -66,50 +66,30 @@ class UserController extends Controller
 
     public function update(UserUpdateRequest $request)
     {
-       // Get the currently authenticated user
     $user = Auth::user(); 
-    
-    // Get the validated data from the request
     $data = $request->validated();
-
-    // Check if there's an uploaded image
     if ($request->hasFile('image')) {
-        // Store the image in a specific directory based on user ID, and get the relative path
-        $imagePath = $request->file('image')->store("images/profile/$user->id", 'public');
-        // Only store the relative path in the database
-        $data['image_url'] = $imagePath;  // Save only the relative path
+        $imageName = time() . '_' . $user->id . '.' . $request->file('image')->extension();
+        $imagePath = $request->file('image')->storeAs("images/profile/$user->id",$imageName ,'public');
+        $data['image_url'] = $imagePath;  
     }
-
-    // Find the user by email
     $upd = User::where('email', $user->email)->first();
-
-    // If user not found, return a 404 response
     if (!$upd) {
         return response()->json(['message' => 'User not found'], 404);
     }
-
-    // Update the user's data
     $upd->fullname = $data['fullname'];
     $upd->username = $data['username'];
     $upd->email = $data['email'];
-
-    // Update password if it's provided
     if (isset($data['password'])) {
-        $upd->password = bcrypt($data['password']);  // Make sure password is hashed
+        $upd->password = bcrypt($data['password']); 
     }
-
-    // Update the image URL (relative path) if it's provided
     if (isset($data['image_url'])) {
         $upd->image_url = $data['image_url'];
     }
-
-    // Save the updated user record
     $upd->save();
-
-    // Return success response
     return response()->json([
         'message' => 'User berhasil di update',
-        'data' => new UserResource($upd)  // Assuming you're using a resource for the user response
+        'data' => new UserResource($upd)  
     ]);
 }
 }
